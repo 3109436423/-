@@ -1,0 +1,166 @@
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
+import pymysql
+
+class Student:
+    def add_student(self):
+        sno = self.sno_var.get()
+        sname = self.sname_var.get()
+        sage = self.sage_var.get()
+        ssex = self.ssex_var.get()
+        sdept = self.sdept_var.get()
+        self.Student_table.insert("", "end", values=(sno, sname, sage, ssex, sdept))
+    def update_student(self):
+        sno = self.sno_var.get()
+        sname = self.sname_var.get()
+        sage = self.sage_var.get()
+        ssex = self.ssex_var.get()
+        sdept = self.sdept_var.get()
+        cursor_row = self.Student_table.focus()
+        content = self.Student_table.item(cursor_row)
+        row = content['values']
+        self.Student_table.item(cursor_row, values=(sno, sname, sage, ssex, sdept))
+    def delete_student(self):
+        cursor_row = self.Student_table.focus()
+        self.Student_table.delete(cursor_row)
+    def clear_entries(self):
+        self.sno_var.set("")
+        self.sname_var.set("")
+        self.sage_var.set("")
+        self.ssex_var.set("")
+        self.sdept_var.set("")
+    def search_students(self):
+        keyword = search_entry.get()
+        self.Student_table.delete(*self.Student_table.get_children())
+        for row in self.data:
+            if keyword.lower() in [str(cell).lower() for cell in row]:
+                self.Student_table.insert("", "end", values=row)
+    def __init__(self, root):
+        self.root = root
+        self.root.title("学生信息管理系统")    
+
+        root.geometry("1300x720+0+0")
+        title = Label(self.root, text="学生信息管理系统", bd=10, relief="groove",
+                      font=("宋体", 40, "bold"), bg="yellow", fg="blue")
+
+        title.pack(side=TOP, fill=X)        
+        Left_Frame = Frame(self.root, borderwidth=5, relief=RIDGE, bg="blue")
+        Left_Frame.place(x=20, y=100, width=450, height=600)
+
+        self.sno_var = StringVar()
+        lbl_sno = Label(Left_Frame, text="学号:", bg="blue", fg="white", font=("宋体", 20, "bold"))
+        lbl_sno.grid(row=1, column=0, padx=20, pady=10, sticky="w")
+        txt_sno = Entry(Left_Frame, textvariable=self.sno_var, font=("宋体", 18, "bold"), bd=5, relief=GROOVE)
+        txt_sno.grid(row=1, column=1, padx=20, pady=10, sticky="w")
+
+
+        self.sname_var = StringVar()
+        lbl_sname = Label(Left_Frame, text="姓名:", bg="blue", fg="white", font=("宋体", 20, "bold"))
+        lbl_sname.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+        txt_sname = Entry(Left_Frame, textvariable=self.sname_var, font=("宋体", 18, "bold"), bd=5, relief=GROOVE)
+        txt_sname.grid(row=2, column=1, padx=20, pady=10, sticky="w")
+
+
+        self.ssex_var = StringVar()
+        lbl_ssex = Label(Left_Frame, text="性别:", bg="blue", fg="white", font=("宋体", 20, "bold"))
+        lbl_ssex.grid(row=3, column=0, padx=20, pady=10, sticky="w")
+        combo_ssex=ttk.Combobox(Left_Frame,textvariable=self.ssex_var,font=("宋体", 18, "bold"),state="readonly",width=19)
+        combo_ssex['values']=("男","女")
+        combo_ssex.grid(row=3, column=1, padx=20, pady=10, sticky="w")       
+
+
+        self.sage_var = StringVar()
+        lbl_sage = Label(Left_Frame, text="年龄:", bg="blue", fg="white", font=("宋体", 20, "bold"))
+        lbl_sage.grid(row=4, column=0, padx=20, pady=10, sticky="w")
+        txt_sage = Entry(Left_Frame, textvariable=self.sage_var, font=("宋体", 18, "bold"), bd=5, relief=GROOVE)
+        txt_sage.grid(row=4, column=1, padx=20, pady=10, sticky="w")        
+
+
+
+        self.sdept_var = StringVar()
+        lbl_sdept = Label(Left_Frame, text="系别:", bg="blue", fg="white", font=("宋体", 20, "bold"))
+        lbl_sdept.grid(row=5, column=0, padx=20, pady=10, sticky="w")
+        txt_sdept = Entry(Left_Frame, textvariable=self.sdept_var, font=("宋体", 18, "bold"), bd=5, relief=GROOVE)
+        txt_sdept.grid(row=5, column=1, padx=20, pady=10, sticky="w")
+       
+        add_button = Button(root, text="添加", command=self.add_student)
+        add_button.config(width=8, height=1)
+        add_button.place(x=25, y=670)
+        
+        update_button = Button(root, text="修改", command=self.update_student)
+        update_button.config(width=8, height=1)
+        update_button.place(x=150, y=670)
+
+        delete_button = Button(root, text="删除", command=self.delete_student)
+        delete_button.config(width=8, height=1)
+        delete_button.place(x=280, y=670)
+        
+        clear_button = Button(root, text="清除", command=self.clear_entries)
+        clear_button.config(width=8, height=1)
+        clear_button.place(x=400, y=670)
+
+
+
+
+        Right_Frame = Frame(root, bd=4, relief=RIDGE, bg="blue")
+        Right_Frame.place(x=500, y=100, width=750, height=580)
+
+        
+        Table_Frame = Frame(Right_Frame, bd=4, relief=RIDGE, bg="blue")
+        Table_Frame.place(x=20, y=60, width=700, height=500)      
+
+        scroll_x = Scrollbar(Table_Frame, orient=HORIZONTAL)
+        scroll_y = Scrollbar(Table_Frame, orient=VERTICAL)
+        columns = ("sno", "sname", "sage", "ssex", "sdept")
+        self.Student_table = ttk.Treeview(Table_Frame, columns=columns, xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
+
+        scroll_x.pack(side=BOTTOM, fill=X)
+        scroll_y.pack(side=RIGHT, fill=Y)
+     
+        scroll_x.config(command=self.Student_table.xview)
+        scroll_y.config(command=self.Student_table.yview)
+
+        self.Student_table.heading("sno", text="学号")
+        self.Student_table.heading("sname", text="姓名")
+        self.Student_table.heading("sage", text="年龄")
+        self.Student_table.heading("ssex", text="性别")
+        self.Student_table.heading("sdept", text="系别")
+        self.Student_table['show'] = 'headings'
+
+
+
+        self.Student_table.column("sno", width=100)
+        self.Student_table.column("sname", width=100)
+        self.Student_table.column("sage", width=100)
+        self.Student_table.column("ssex", width=100)
+        self.Student_table.column("sdept", width=100)
+        
+        
+        
+        self.Student_table.pack(fill=BOTH,expand=1)
+        self.Student_table.bind("<ButtonRelease-1>", self.get_cursor)
+
+    def get_cursor(self,evnt):
+        cursor_row=self.Student_table.focus()
+        content=self.Student_table.item(cursor_row)
+        row=content['values']
+        self.sno_var.set(row[0])
+        self.sname_var.set(row[1])
+        self.ssex_var.set(row[2])
+        self.sage_var.set(row[3])
+        self.sdept_var.set(row[4])
+      
+    
+root = Tk()
+obj = Student(root)
+root.mainloop()
+
+search_label = Label(root, text="查询:")
+search_label.place(x=500, y=10)
+
+search_entry = Entry(root)
+search_entry.place(x=550, y=10)
+
+search_button = Button(root, text="搜索", command=self.search_students)
+search_button.place(x=650, y=10)
